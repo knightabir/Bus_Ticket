@@ -396,8 +396,8 @@ public class AddEmploye extends javax.swing.JInternalFrame {
             JOptionPane.showMessageDialog(this, "Invalid Email");
         } else if (!mContact.matches()) {
             JOptionPane.showMessageDialog(this, "Invalid Contact Number");
-        } else if (!mNic.matches()) {
-            JOptionPane.showMessageDialog(this, "Invalid CNIC Number");
+        } else if (ecnic.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Please Enter Pan Number.");
         } else {
             try {
                 // Insert data into the database

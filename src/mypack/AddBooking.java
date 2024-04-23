@@ -15,11 +15,7 @@ import static java.awt.print.Printable.NO_SUCH_PAGE;
 import static java.awt.print.Printable.PAGE_EXISTS;
 import java.awt.print.PrinterException;
 import java.awt.print.PrinterJob;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JOptionPane;
@@ -60,7 +56,7 @@ public class AddBooking extends javax.swing.JInternalFrame implements Printable 
          
             st = con.createStatement();
         
-        rs=st.executeQuery("select R_Name from TB_Route");
+        rs=st.executeQuery("select R_Name from tb_route");
             while(rs.next())
         {
         cmbroute.addItem(rs.getString(1));
@@ -180,7 +176,11 @@ public class AddBooking extends javax.swing.JInternalFrame implements Printable 
         jButton1.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         jButton1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton1ActionPerformed(evt);
+                try {
+                    jButton1ActionPerformed(evt);
+                }catch (Exception e){
+                    System.out.println(e);
+                }
             }
         });
 
@@ -478,14 +478,15 @@ public class AddBooking extends javax.swing.JInternalFrame implements Printable 
         }
         else
         {
-        String cnic = "'" +  txtnic.getText() + "'";
-        String fname = "'" +  txtfname.getText() + "'";
-        String route = "'" + cmbroute.getSelectedItem().toString() + "'";
-        String busnum = "'" + txtbusnum.getText() + "'";
-        String sstop= "'" + txtstartstop.getText() + "'";
-        String estop = "'" + cmblaststop.getSelectedItem().toString() + "'";
-        String comboseat = "'" + cmbseat.getSelectedItem().toString() + "'";
-        String cmb= cmbnic.getSelectedItem().toString();
+            String cnic = txtnic.getText();
+            String fname = txtfname.getText();
+            String route = cmbroute.getSelectedItem().toString(); // No need to enclose in single quotes
+            String busnum = txtbusnum.getText(); // No need to enclose in single quotes
+            String sstop = txtstartstop.getText(); // No need to enclose in single quotes
+            String estop = cmblaststop.getSelectedItem().toString(); // No need to enclose in single quotes
+            int comboseat = Integer.parseInt(cmbseat.getSelectedItem().toString());
+            String cmb = cmbnic.getSelectedItem().toString(); // No need to enclose in single quotes
+
         
        if(cmb.equals("NIC"))
        { 
@@ -493,10 +494,7 @@ public class AddBooking extends javax.swing.JInternalFrame implements Printable 
               
                 try
                 {
-               
-                
-st.executeUpdate("Declare @Custid int set @custid=(select Cust_ID from TB_customer where Cust_Cnic = "+cnic+") declare @routid int set @routid=(select Rout_id From TB_Routinee where R_id= (select R_Id from TB_Route where R_Name = "+route+")) declare @bid int set @bid=(select Bus_id from TB_Buses Where Bus_Number="+busnum+")insert into TB_Booking values (@custid,@routid,@bid, "+sstop+", "+estop+" ,default,default,getdate(),"+comboseat+",default)");
-                 
+                st.executeUpdate("Declare @Custid int set @custid=(select Cust_ID from tb_customer where Cust_Cnic = "+cnic+") declare @routid int set @routid=(select Rout_id From tb_routinee where R_id= (select R_Id from tb_route where R_Name = "+route+")) declare @bid int set @bid=(select Bus_id from tb_buses Where Bus_Number="+busnum+")insert into tb_booking values (@custid,@routid,@bid, "+sstop+", "+estop+" ,default,default,getdate(),"+comboseat+",default)");
                // JOptionPane.showMessageDialog(this, "Ticket Booked");
                 
               int a = JOptionPane.showConfirmDialog(this, "Booking Completed . Press Yes to Print This Ticket", "Confirm", JOptionPane.OK_OPTION);
@@ -519,37 +517,101 @@ st.executeUpdate("Declare @Custid int set @custid=(select Cust_ID from TB_custom
                 }catch(Exception e)
                 {
                     JOptionPane.showMessageDialog(this, "Error ! Please Try Again");
+                    System.out.println(e);
                 }
           }
           else if(cmb.equals("Name"))
           {
               try
-                {
-              
-                
-st.executeUpdate("Declare @Custid int set @custid=(select Cust_ID from TB_customer where Cust_Name = "+cnic+" and Cust_FName="+fname+") declare @routid int set @routid=(select Rout_id From TB_Routinee where R_id= (select R_Id from TB_Route where R_Name = "+route+")) declare @bid int set @bid=(select Bus_id from TB_Buses Where Bus_Number="+busnum+")insert into TB_Booking values (@custid,@routid,@bid, "+sstop+", "+estop+" ,default,default,getdate(),"+comboseat+",default)");
-                 
-               // JOptionPane.showMessageDialog(this, "Data Saved");
-               
-              int a = JOptionPane.showConfirmDialog(this, "Booking Completed . Press Yes to Print This Ticket", "Confirm", JOptionPane.OK_OPTION);
-              if(a == 0)
-              {
-                    PrinterJob job = PrinterJob.getPrinterJob();
-                    job.setPrintable(this);
-                    boolean ok = job.printDialog();
-                    if (ok) {
+                {// Define local variables
+                    int custId = 0;
+                    int routId = 0;
+                    int busId = 0;
+
+// Retrieve Custid
+                    ResultSet rs = st.executeQuery("SELECT Cust_ID FROM tb_customer WHERE Cust_Name = '" + cnic + "' AND Cust_FName = '" + fname + "'");
+                    if (rs.next()) {
+                        custId = rs.getInt("Cust_ID");
+                    }
+
+// Retrieve routid
+                    rs = st.executeQuery("SELECT Rout_id FROM tb_routinee WHERE R_id = (SELECT R_Id FROM tb_route WHERE R_Name = '" + route + "')");
+                    if (rs.next()) {
+                        routId = rs.getInt("Rout_id");
+                    }
+
+// Retrieve bid
+                    rs = st.executeQuery("SELECT Bus_id FROM tb_buses WHERE Bus_Number = '" + busnum + "'");
+                    if (rs.next()) {
+                        busId = rs.getInt("Bus_id");
+                    }
+
+// Insert into tb_booking using local variables
+                    // Insert into tb_booking using local variables
+                    try {
+
+                        String sql = "INSERT INTO tb_booking (Cust_ID, Rout_ID, Bus_Id, Start_stop, Last_Stop, Av_seats, Booked_seats, Booking_Date, Seat_num, STATUS) " +
+                                "VALUES (?, ?, ?, ?, ?, DEFAULT, DEFAULT, CURDATE(), ?, 'DEFAULT')";
+
+                        Connection connection = Connect.ConnectDB();
+
                         try {
-                             job.print();
-               } catch (PrinterException ex) {
-                /* The job did not successfully complete */
-                    
-               }
-                             }
-                
-              }
-                }catch(Exception e)
+                            assert connection != null;
+                            try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+                                pstmt.setInt(1, custId);
+                                pstmt.setInt(2, routId);
+                                pstmt.setInt(3, busId);
+                                pstmt.setString(4, sstop);
+                                pstmt.setString(5, estop);
+                                pstmt.setInt(6, comboseat);
+
+                                System.out.println(custId);
+                                System.out.println(routId);
+                                System.out.println(busId);
+                                System.out.println(sstop);
+                                System.out.println(estop);
+                                System.out.println(comboseat);
+
+                                pstmt.executeUpdate();
+                            }
+                        } catch (SQLException e) {
+                            e.printStackTrace();
+                            System.out.println("Error : " + e);
+                        }
+
+
+
+
+                    } catch (Exception e) {
+                        System.out.println("Error occurred: " + e.getMessage());
+                        e.printStackTrace();
+                        System.out.println("An error occurred while inserting into tb_booking.");
+                    }
+
+
+// Display confirmation message
+                    int a = JOptionPane.showConfirmDialog(this, "Booking Completed . Press Yes to Print This Ticket", "Confirm", JOptionPane.OK_OPTION);
+                    if (a == 0) {
+                        PrinterJob job = PrinterJob.getPrinterJob();
+                        job.setPrintable(this);
+                        boolean ok = job.printDialog();
+                        if (ok) {
+                            try {
+                                job.print();
+                            } catch (PrinterException ex) {
+                                ex.printStackTrace();
+                                JOptionPane.showMessageDialog(this, "An error occurred while printing. Please check your printer settings.");
+                            }
+                        }
+                    }
+                }
+              catch(Exception e)
                 {
                     JOptionPane.showMessageDialog(this, "Error ! Please Try Again!");
+                    System.out.println("-------------->");
+                    System.out.println("This is the function");
+                    System.out.println(e);
+
                 }
           }
         
@@ -571,52 +633,52 @@ st.executeUpdate("Declare @Custid int set @custid=(select Cust_ID from TB_custom
          String cmb= "'" + cmbroute.getSelectedItem().toString()+ "'";
                
          try {
-             
-            rs=st.executeQuery("  select Bus_Number from TB_Buses where bus_id=(select bus_id from TB_Routinee where R_id=(select R_id from TB_Route where R_Name="+cmb+"))    ");
-            
+
+            rs=st.executeQuery("  select Bus_Number from tb_buses where Bus_id=(select Bus_id from tb_routinee where R_id=(select R_id from tb_route where R_Name="+cmb+"))    ");
+
             while(rs.next())
             {
             txtbusnum.setText(rs.getString(1));
             }
-            rs=st.executeQuery("  select R_Start from TB_Route where R_id=(select R_id from TB_Route where R_Name="+cmb+")    ");
+            rs=st.executeQuery("  select R_Start from tb_route where R_id=(select R_id from tb_route where R_Name="+cmb+")    ");
             
             while(rs.next())
             {
             txtstartstop.setText(rs.getString(1));
             }
-            rs=st.executeQuery(" select RC_StopName from TB_RouteCover where R_id=(select R_id from TB_Route where R_Name="+cmb+")    ");
+            rs=st.executeQuery(" select RC_StopName from tb_routecover where R_id=(select R_id from tb_route where R_Name="+cmb+")    ");
             
             while(rs.next())
             {
             cmblaststop.addItem(rs.getString(1));
             }
             
-            rs=st.executeQuery(" select Av_seats from TB_Booking where Rout_id=(select Rout_id from TB_Routinee where R_id=(select R_id from TB_Route where R_Name="+cmb+"))    ");
+            rs=st.executeQuery(" select Av_seats from tb_booking where Rout_ID=(select Rout_ID from tb_routinee where R_id=(select R_id from tb_route where R_Name="+cmb+"))    ");
             
             while(rs.next())
             {
             txtavseats.setText(rs.getString(1));
             }
             
-            rs=st.executeQuery(" select Rout_Date from TB_Routinee where Rout_id=(select Rout_id from TB_Routinee where R_id=(select R_id from TB_Route where R_Name="+cmb+"))    ");
+            rs=st.executeQuery(" select Rout_Date from tb_routinee where Rout_ID=(select Rout_ID from tb_routinee where R_id=(select R_id from tb_route where R_Name="+cmb+"))    ");
             while(rs.next())
             {
             txtd.setText(rs.getString(1));
             }
-            rs=st.executeQuery(" select Rout_Time from TB_Routinee where Rout_id=(select Rout_id from TB_Routinee where R_id=(select R_id from TB_Route where R_Name="+cmb+"))    ");
+            rs=st.executeQuery(" select Rout_time from tb_routinee where Rout_ID=(select Rout_ID from tb_routinee where R_id=(select R_id from tb_route where R_Name="+cmb+"))    ");
             
             while(rs.next())
             {
             txtt.setText(rs.getString(1));
             }
             
-            rs=st.executeQuery(" select Booked_seats from TB_Booking where Rout_id=(select Rout_id from TB_Routinee where R_id=(select R_id from TB_Route where R_Name="+cmb+"))    ");
+            rs=st.executeQuery(" select Booked_seats from tb_booking where Rout_ID=(select Rout_ID from tb_routinee where R_id=(select R_id from tb_route where R_Name="+cmb+"))    ");
             while(rs.next())
             {
             txtbook.setText(rs.getString(1));
             }
             
-            rs=st.executeQuery(" select Bus_Capacity from TB_Buses where bus_number='"+ txtbusnum.getText() +"'    ");
+            rs=st.executeQuery(" select Bus_Capacity from tb_buses where Bus_Number='"+ txtbusnum.getText() +"'    ");
             while(rs.next())
             {   
                 int cap= rs.getInt(1);
@@ -626,7 +688,7 @@ st.executeUpdate("Declare @Custid int set @custid=(select Cust_ID from TB_custom
                     cmbseat.addItem(i);
                 }
             }
-            rs=st.executeQuery(" select Seat_num from TB_Booking where Rout_id=(select Rout_id from TB_Routinee where R_id=(select R_id from TB_Route where R_Name="+cmb+"))    ");
+            rs=st.executeQuery(" select Seat_num from tb_booking where Rout_id=(select Rout_ID from tb_routinee where R_id=(select R_id from tb_route where R_Name="+cmb+"))");
             
             while(rs.next())
             {
@@ -639,6 +701,7 @@ st.executeUpdate("Declare @Custid int set @custid=(select Cust_ID from TB_custom
         {
             Logger.getLogger(AddBooking.class.getName()).log(Level.SEVERE, null, ex);
             JOptionPane.showMessageDialog(this, "Error ! Please Try Again");
+            System.out.println(ex);
         }
        
     }//GEN-LAST:event_cmbrouteItemStateChanged
@@ -680,7 +743,7 @@ st.executeUpdate("Declare @Custid int set @custid=(select Cust_ID from TB_custom
         {    
             
         
-        rs= st.executeQuery(" select Cust_Name,Cust_Age From TB_Customer where Cust_Name = "+cnic+" and Cust_fname= "+fname+"   ");
+        rs= st.executeQuery(" select Cust_Name,Cust_Age From tb_customer where Cust_Name = "+cnic+" and Cust_FName= "+fname+"   ");
 
             if(rs.next())
             {
@@ -709,7 +772,7 @@ st.executeUpdate("Declare @Custid int set @custid=(select Cust_ID from TB_custom
         {
             try
         {                  
-        rs= st.executeQuery(" select Cust_Name,Cust_Age From TB_Customer where Cust_CNIC = "+cnic+" ");
+        rs= st.executeQuery(" select Cust_Name,Cust_Age From tb_customer where Cust_Cnic = "+cnic+" ");
 
             if(rs.next())
             {
@@ -723,13 +786,13 @@ st.executeUpdate("Declare @Custid int set @custid=(select Cust_ID from TB_custom
             
             else
             {
-              JOptionPane.showMessageDialog(this, "Record Not Found or Unregisted Customer");  
+              JOptionPane.showMessageDialog(this, "Record Not Found or Unregisterd Customer");
                
             }
         }
         catch(SQLException | HeadlessException e)
             {
-               JOptionPane.showMessageDialog(this, "Record Not Found or Unregisted Customer !");
+               JOptionPane.showMessageDialog(this, "Record Not Found or Unregisterd Customer !");
               
             }
         }
@@ -803,7 +866,7 @@ st.executeUpdate("Declare @Custid int set @custid=(select Cust_ID from TB_custom
         }
         try {
             //getting Ticket From Database//
-            rs=st.executeQuery("SELECT TOP 1 * FROM TB_Ticket ORDER BY Tp_ID DESC");
+            rs=st.executeQuery("SELECT * FROM tb_ticket ORDER BY Tp_ID DESC LIMIT 1");
             while(rs.next())
             {
             Ticketid=rs.getString(1);    

@@ -6,11 +6,7 @@ package mypack;
 
 import java.awt.Color;
 import java.awt.HeadlessException;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.swing.JOptionPane;
@@ -271,60 +267,61 @@ public class AddCustomer extends javax.swing.JInternalFrame {
         this.dispose();
     }//GEN-LAST:event_jButton2ActionPerformed
 
-    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-        // TODO add your handling code here:
-        
-        
- 
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {
         String name = "'" + txtname.getText() + "'";
         String fname = "'" + txtfname.getText() + "'";
         String gender = "'" + cmbgender.getSelectedItem().toString() + "'";
         String email = "'" + txtemail.getText() + "'";
         String cnic = "'" + txtcnic.getText() + "'";
         String dob = "'" + txtdob.getText() + "'";
-        String id = "'"+11+ "'";
-        Pattern p=Pattern.compile("[a-z0-9]{3,30}\\@{1}[a-z0-9]{3,20}\\.{1}[a-z]{2,3}");
-        Matcher m=p.matcher(email);
-                
-        Pattern pNic=Pattern.compile("[0-9]{5}\\-{1}[0-9]{7}\\-[0-9]{1}");
-        Matcher mNic=pNic.matcher(cnic);
-        
-        //pattern = Pattern.compile(EMAIL_PATTERN);
-        //matcher = pattern.matcher(email);
-       
-        if(txtname.getText().equals("") || txtfname.getText().equals("") || cmbgender.getSelectedIndex()==0 || txtemail.getText().equals("")
-                || txtcnic.getText().equals("") || txtdob.getText().equals(""))
-        {
-                JOptionPane.showMessageDialog(this, "You Forgot To Fill All The Fields");
-        
-        }
-        else if(!m.find())
-        {
-            JOptionPane.showMessageDialog(this,"Invalid Email");
-        }
-        else if(!mNic.find())
-        {
-            JOptionPane.showMessageDialog(this,"Invalid Nic Number");
-        }
-        else
-        {
-                try
-                {
+        int id = 1;
+        Pattern p = Pattern.compile("[a-z0-9]{3,30}\\@{1}[a-z0-9]{3,20}\\.{1}[a-z]{2,3}");
+        Matcher m = p.matcher(email);
 
-                st.executeUpdate("insert into TB_customer values ("+id+ ","+ name  +","+ fname  +"," +gender+"," +email+"," +cnic+"," +dob+",default)");
+        Pattern pNic = Pattern.compile("[0-9]{5}\\-{1}[0-9]{7}\\-[0-9]{1}");
 
-                JOptionPane.showMessageDialog(this, "Customer Details Added");
-                clear();
-                
-
-
-                }catch(SQLException | HeadlessException e)
-                {   
-                    JOptionPane.showMessageDialog(this, "Error ! Check All the fields again");
-                }
-        
+        if(txtname.getText().isEmpty() || txtfname.getText().isEmpty() || cmbgender.getSelectedIndex() == 0 ||
+                txtemail.getText().isEmpty() || txtcnic.getText().isEmpty() || txtdob.getText().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "You Forgot To Fill All The Fields");
+            return;
         }
-    }//GEN-LAST:event_jButton1ActionPerformed
+
+        if(!m.find()) {
+            JOptionPane.showMessageDialog(this, "Invalid Email");
+            return;
+        }
+
+        if(cnic.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Invalid PAN Number");
+            return;
+        }
+
+        try {
+            // Create a PreparedStatement to avoid SQL Injection
+            PreparedStatement pst = con.prepareStatement("INSERT INTO tb_customer (E_id, Cust_Name, Cust_FName, Cust_Gender, Cust_Email, Cust_Cnic, Cust_DOB, Cust_Age)" +
+                    " VALUES (?, ?, ?, ?, ?, ?, ?, DEFAULT)");
+
+            // Set parameters
+            pst.setInt(1, id);
+            pst.setString(2, txtname.getText());
+            pst.setString(3, txtfname.getText());
+            pst.setString(4, cmbgender.getSelectedItem().toString());
+            pst.setString(5, txtemail.getText());
+            pst.setString(6, txtcnic.getText());
+            pst.setString(7, txtdob.getText());
+
+            // Execute the PreparedStatement
+            pst.executeUpdate();
+
+            JOptionPane.showMessageDialog(this, "Customer Details Added");
+            clear();
+
+        } catch(SQLException e) {
+            JOptionPane.showMessageDialog(this, "Error ! Check All the fields again");
+            System.out.println(e);
+        }
+    }
+//GEN-LAST:event_jButton1ActionPerformed
 
     private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
         // TODO add your handling code here:

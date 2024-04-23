@@ -229,7 +229,7 @@ public class ViewTicket extends javax.swing.JInternalFrame {
         String cmbroute = "'" + cmbr.getSelectedItem().toString()+ "'";
         try
         {
-            rs=st.executeQuery("  select * from TB_Ticket where Cust_Route= "+cmbroute+" and Ticket_status='confirm'   ");
+            rs=st.executeQuery("  select * from tb_Ticket where Cust_Route= "+cmbroute+" and Ticket_status='confirm'   ");
             
             while(rs.next())
             {
@@ -252,7 +252,7 @@ public class ViewTicket extends javax.swing.JInternalFrame {
        
         try
         {
-            rs=st.executeQuery("  select * from TB_Ticket ");
+            rs=st.executeQuery("  select * from tb_Ticket ");
             
             while(rs.next())
             {

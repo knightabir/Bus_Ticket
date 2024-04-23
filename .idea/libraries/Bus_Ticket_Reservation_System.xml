@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="Bus-Ticket-Reservation-System">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/mysql-connector-j.jar!/" />
+      <root url="jar://$PROJECT_DIR$/JTattooDemo.jar!/" />
+      <root url="jar://$PROJECT_DIR$/sqljdbc4.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

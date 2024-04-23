@@ -350,97 +350,90 @@ public class UpdateBooking extends javax.swing.JInternalFrame  {
 
     private void btncancelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btncancelActionPerformed
         // TODO add your handling code here:
-        
-        String txtfield= searchtxt.getText();
-        String busname= txtbusnum.getText();
+
+        String txtfield = searchtxt.getText();
+        String busname = txtbusnum.getText();
         String seat = txtseat.getText();
-        String a="Cancel";
- 
+        String a = "Cancel";
+
         try {
-            
-            
-            rs=st.executeQuery(("select Ticket_status from TB_Ticket where TP_ID="+txtfield+" "));
-            rs.next();
-            String status=rs.getString(1);
-            
-            if(status.equals(a))
-            {
-                JOptionPane.showMessageDialog(this,"This ticket is already cancelled");
-                return;
+            rs = st.executeQuery("SELECT Ticket_status FROM tb_ticket WHERE Tp_ID=" + txtfield);
+            if (rs.next()) {
+                String status = rs.getString(1);
+
+                if (status.equals(a)) {
+                    JOptionPane.showMessageDialog(this, "This ticket is already cancelled");
+                    return;
+                } else {
+                    try {
+                        st.executeUpdate("UPDATE tb_ticket SET Ticket_status='" + a + "' WHERE Tp_ID=" + txtfield);
+                    } catch (SQLException ex) {
+                        ex.printStackTrace();
+                        JOptionPane.showMessageDialog(this, "Error cancelling ticket");
+                        return;
+                    }
+
+                    try {
+                        st.executeUpdate("UPDATE tb_booking SET status= '" + a + "' WHERE seat_num='" + seat + "' AND Cust_id=(SELECT Cust_id FROM tb_ticket WHERE Tp_ID=" + txtfield + ")");
+                    } catch (SQLException ex) {
+                        ex.printStackTrace();
+                        JOptionPane.showMessageDialog(this, "Error updating booking status");
+                        return;
+                    }
+
+                    rs = st.executeQuery("SELECT Tp_price FROM tb_ticket WHERE Tp_ID=" + txtfield);
+                    if (rs.next()) {
+                        txtp.setText(rs.getString(1));
+                        String p = rs.getString(1);
+                        JOptionPane.showMessageDialog(this, "Ticket Cancelled \n Amount after Cancellation is :" + p);
+                    }
+                }
+            } else {
+                JOptionPane.showMessageDialog(this, "Ticket ID not found");
             }
-            else
-            {
-            
-            
-            try {
-            st.executeUpdate(" Update TB_Ticket set Ticket_status='"+a+"' where TP_ID="+txtfield+" ");
-            
-        
         } catch (SQLException ex) {
-            Logger.getLogger(UpdateBooking.class.getName()).log(Level.SEVERE, null, ex);
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Error accessing database");
         }
-        
-        
-            
-              st.executeUpdate(" Update TB_Booking set status= '"+a+"' where seat_num='"+seat+ "' and Cust_id=(select Cust_id From TB_Ticket where TP_ID="+txtfield+") ");
-              
-              rs=st.executeQuery("Select Tp_price from TB_Ticket where TP_id="+txtfield+" ");
-              if(rs.next())
-              {
-                  txtp.setText(rs.getString(1));
-                  String p;
-                  p = rs.getString(1);
-                  JOptionPane.showMessageDialog(this,"Ticket Cancelled \n Amount after Cancellation is :"+p+" ");
-              }}
-            } catch (SQLException ex) {
-                 //Logger.getLogger(UpdateBooking.class.getName()).log(Level.SEVERE, null, ex);
-                ex.printStackTrace();
-                JOptionPane.showMessageDialog(this,"Error !");
-            }
-        
     }//GEN-LAST:event_btncancelActionPerformed
-   
- 
-    
+
+
+
     private void btnSearchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSearchActionPerformed
         // TODO add your handling code here:
         clearfield();
-        String txtfield= searchtxt.getText();
-        
-        if(searchtxt.getText().equals(""))
-        {
-            JOptionPane.showMessageDialog(this,"Please Insert Value To Be Searched!");
+        String txtfield = searchtxt.getText();
+
+        if (txtfield.equals("")) {
+            JOptionPane.showMessageDialog(this, "Please Insert Value To Be Searched!");
             searchtxt.requestFocus();
+            return;
         }
-        
+
         try {
-                rs = st.executeQuery("select * from TB_Ticket where Tp_id = '" + txtfield + "'");
-                
-             if(rs.next())
-            {
-                txtname.setText(rs.getString(3));
-                txtroute.setText(rs.getString(4));
-                txtbusnum.setText(rs.getString(7));
-                txtfrom.setText(rs.getString(5));
-                txtto.setText(rs.getString(6));
-                txtseat.setText(rs.getString(11));
-                txtdate.setText(rs.getString(8));
-                txtp.setText(rs.getString(12));
-                
-            }
-             else{
-        JOptionPane.showMessageDialog(this,"Record Not Found ! Try Again");
-        searchtxt.requestFocus();
-        searchtxt.setText("");
-             }
-            } catch (SQLException | HeadlessException ex) {
-                ex.printStackTrace();
+            rs = st.executeQuery("SELECT * FROM tb_ticket WHERE Tp_ID = '" + txtfield + "'");
+            if (rs.next()) {
+                txtname.setText(rs.getString("Cust_Name"));
+                txtroute.setText(rs.getString("Cust_Route"));
+                txtbusnum.setText(rs.getString("Cust_BusNum"));
+                txtfrom.setText(rs.getString("Cust_From"));
+                txtto.setText(rs.getString("Cust_To"));
+                txtseat.setText(rs.getString("Seat_num"));
+                txtdate.setText(rs.getString("Booking_date"));
+                txtp.setText(rs.getString("Tp_price"));
+            } else {
+                JOptionPane.showMessageDialog(this, "Record Not Found ! Try Again");
                 searchtxt.requestFocus();
                 searchtxt.setText("");
-                JOptionPane.showMessageDialog(this,"No Record Found ! Try Again with a correct TICKET NUMBER");
             }
-        
-    }//GEN-LAST:event_btnSearchActionPerformed
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Error accessing database");
+            searchtxt.requestFocus();
+            searchtxt.setText("");
+        }
+    }
+//GEN-LAST:event_btnSearchActionPerformed
 
     private void searchtxtActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_searchtxtActionPerformed
         // TODO add your handling code here:
